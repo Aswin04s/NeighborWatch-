@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Reports - Neighborhood Watch</title>
+    <!-- Add these CSS links -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand { font-weight: bold; }
+        .card { margin-bottom: 1rem; }
+        .status-badge { font-size: 0.8rem; }
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-medium { border-left: 4px solid #ffc107; }
+        .priority-low { border-left: 4px solid #28a745; }
+    </style>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/reports">
+            <i class="fas fa-shield-alt"></i> Neighborhood Watch
+        </a>
+        <div class="navbar-nav">
+            <a class="nav-link" href="/reports">All Reports</a>
+            <a class="nav-link" href="/reports/new">Report Issue</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-list"></i> Community Reports
+            <span th:if="${filterType}" class="badge bg-secondary" th:text="${filterType}"></span>
+            <span th:if="${filterStatus}" class="badge bg-secondary" th:text="${filterStatus}"></span>
+            <span th:if="${searchLocation}" class="badge bg-info" th:text="'Location: ' + ${searchLocation}"></span>
+        </h1>
+        <a href="/reports/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Report New Issue
+        </a>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-clock"></i> Pending</h5>
+                    <h2 th:text="${pendingCount}" class="card-text">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-tasks"></i> In Progress</h5>
+                    <h2 th:text="${inProgressCount}" class="card-text">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-check"></i> Resolved</h5>
+                    <h2 th:text="${resolvedCount}" class="card-text">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-chart-bar"></i> Total</h5>
+                    <h2 th:text="${reports != null ? reports.size() : 0}" class="card-text">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <form action="/reports/search" method="get" class="d-flex">
+                        <input type="text" name="location" class="form-control" placeholder="Search by location...">
+                        <button type="submit" class="btn btn-outline-primary ms-2">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="/reports" class="btn btn-outline-secondary">All</a>
+                        <a href="/reports/type/STREETLIGHT_OUT" class="btn btn-outline-warning">
+                            <i class="fas fa-lightbulb"></i> Streetlights
+                        </a>
+                        <a href="/reports/type/POTHOLE" class="btn btn-outline-danger">
+                            <i class="fas fa-road"></i> Potholes
+                        </a>
+                        <a href="/reports/type/SUSPICIOUS_ACTIVITY" class="btn btn-outline-dark">
+                            <i class="fas fa-eye"></i> Suspicious Activity
+                        </a>
+                        <a href="/reports/status/PENDING" class="btn btn-outline-warning">Pending</a>
+                        <a href="/reports/status/IN_PROGRESS" class="btn btn-outline-info">In Progress</a>
+                        <a href="/reports/status/RESOLVED" class="btn btn-outline-success">Resolved</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports List -->
+    <div th:if="${reports != null and !reports.empty}">
+        <div th:each="report : ${reports}" class="card mb-3">
+            <div class="card-body" th:classappend="${report.priority.name() == 'HIGH' ? 'priority-high' :
+                                                      report.priority.name() == 'MEDIUM' ? 'priority-medium' :
+                                                      'priority-low'}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="card-title">
+                            <span th:text="${report.title}">Title</span>
+                            <span class="badge status-badge ms-2"
+                                  th:classappend="${report.status.name() == 'PENDING' ? 'bg-warning' :
+                                                     report.status.name() == 'IN_PROGRESS' ? 'bg-info' : 'bg-success'}"
+                                  th:text="${report.status}">
+                                    Status
+                                </span>
+                            <span class="badge status-badge"
+                                  th:classappend="${report.priority.name() == 'HIGH' ? 'bg-danger' :
+                                                     report.priority.name() == 'MEDIUM' ? 'bg-warning' : 'bg-success'}"
+                                  th:text="${report.priority}">
+                                    Priority
+                                </span>
+                        </h5>
+                        <p class="card-text" th:text="${report.description}">Description</p>
+                        <div class="text-muted small">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span th:text="${report.location}">Location</span> |
+                            <i class="fas fa-tag"></i>
+                            <span th:text="${report.issueType}">Issue Type</span> |
+                            <i class="fas fa-clock"></i>
+                            <span th:text="${#temporals.format(report.createdAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+                            <span th:if="${report.reporterName}">| Reported by: <span th:text="${report.reporterName}"></span></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a th:href="@{/reports/{id}(id=${report.id})}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a th:href="@{/reports/{id}/edit(id=${report.id})}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${reports == null or reports.empty}" class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h3 class="text-muted">No Reports Found</h3>
+        <p class="text-muted">No community reports match your criteria.</p>
+        <a href="/reports/new" class="btn btn-primary">Create First Report</a>
+    </div>
+</div>
+
+<footer class="bg-light mt-5 py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2024 Neighborhood Watch System</p>
+    </div>
+</footer>
+
+<!-- Add this JavaScript at the bottom -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
